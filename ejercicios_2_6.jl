@@ -164,15 +164,14 @@ end;
 using Random
 
 function holdOut(N::Int, P::Real)
-    #
-    # Codigo a desarrollar
-    #
+    v = rand(1:N,P*N)
+    return v
 end;
 
 function holdOut(N::Int, Pval::Real, Ptest::Real)
-    #
-    # Codigo a desarrollar
-    #
+    v1 = rand(1:N,Pval*N)
+    v2 = rand(1:N,Ptest*N)
+    return (v1,v2)
 end;
 
 function trainClassANN(topology::AbstractArray{<:Int,1},
