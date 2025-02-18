@@ -26,64 +26,61 @@ function oneHotEncoding(feature::AbstractArray{Bool,1})
 end;
 
 function calculateMinMaxNormalizationParameters(dataset::AbstractArray{<:Real,2})
-    #
-    # Codigo a desarrollar
-    #
+    mx = maximum(dataset, dims= 1)
+    mn = minimum(dataset, dims= 1)
+    return (mx, mn)
 end;
 
 function calculateZeroMeanNormalizationParameters(dataset::AbstractArray{<:Real,2})
-    #
-    # Codigo a desarrollar
-    #
+    mn = mean(dataset, dims = 1)
+    sigma = var(dataset, dims = 1)
+    return (mn, sigma)
 end;
 
+
 function normalizeMinMax!(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
-    #
-    # Codigo a desarrollar
-    #
+    (mx, mn) = normalizationParameters
+    return (dataset[:,1:4] .- mn) ./ (mx -mn)
 end;
 
 function normalizeMinMax!(dataset::AbstractArray{<:Real,2})
-    #
-    # Codigo a desarrollar
-    #
+    (mx, mn) = calculateMinMaxNormalizationParameters(dataset)
+    normalizeMinMax!(dataset, (mx,mn))
 end;
 
 function normalizeMinMax(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
-    #
-    # Codigo a desarrollar
-    #
+    (mx, mn) = normalizationParameters
+    data = copy(dataset)
+    return (data[:,1:4] .- mn) ./ (mx -mn)
 end;
 
 function normalizeMinMax(dataset::AbstractArray{<:Real,2})
-    #
-    # Codigo a desarrollar
-    #
+    (mx, mn) = calculateMinMaxNormalizationParameters(dataset)
+    normalizeMinMax(dataset, (mx, mn))
 end;
 
+
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
-    #
-    # Codigo a desarrollar
-    #
+    (mn, sigma) = normalizationParameters
+    return (dataset .- mn) ./  sigma
 end;
 
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2})
-    #
-    # Codigo a desarrollar
-    #
+    (mn, sigma) = calculateZeroMeanNormalizationParameters(dataset)
+    normalizeZeroMean!(dataset, (mn, sigma))
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
-    #
-    # Codigo a desarrollar
-    #
+    (mn, sigma) = normalizationParameters
+    data = copy(dataset)
+    return (data .- mn) ./  sigma
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2})
-    #
-    # Codigo a desarrollar
-    #
+    (mn, sigma) = calculateZeroMeanNormalizationParameters(dataset)
+    normalizeZeroMean(dataset, (mn, sigma))
 end;
+
 
 function classifyOutputs(outputs::AbstractArray{<:Real,1}; threshold::Real=0.5)
     #
