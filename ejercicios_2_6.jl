@@ -40,7 +40,7 @@ end;
 
 function normalizeMinMax!(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     (mx, mn) = normalizationParameters
-    return (dataset[:,1:4] .- mn) ./ (mx -mn)
+    return (dataset[:, :] .- mn) ./ (mx -mn)
 end;
 
 function normalizeMinMax!(dataset::AbstractArray{<:Real,2})
@@ -51,7 +51,7 @@ end;
 function normalizeMinMax(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     (mx, mn) = normalizationParameters
     data = copy(dataset)
-    return (data[:,1:4] .- mn) ./ (mx -mn)
+    return (data[:,:] .- mn) ./ (mx -mn)
 end;
 
 function normalizeMinMax(dataset::AbstractArray{<:Real,2})
