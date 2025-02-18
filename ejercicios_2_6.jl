@@ -85,11 +85,14 @@ function classifyOutputs(outputs::AbstractArray{<:Real,1}; threshold::Real=0.5)
 end;
 
 function classifyOutputs(outputs::AbstractArray{<:Real,2}; threshold::Real=0.5)
-    if size(outputs)[2] == 1
+     if size(outputs)[2] == 1
         outputs = outputs[:]
         return reshape(classifyOutputs(outputs[:], threshold), :, 1)
     else
-        return outputs.==maximum(outputs, dims=2)  
+        (_,indicesMaxEachInstance) = findmax(outputs, dims=2);
+        outputs = falses(size(outputs));
+        outputs[indicesMaxEachInstance] .= true;
+        return outputs  
     end   
 end;
 
