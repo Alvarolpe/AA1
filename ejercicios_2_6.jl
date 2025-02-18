@@ -118,23 +118,30 @@ function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,
 end;
 
 function buildClassANN(numInputs::Int, topology::AbstractArray{<:Int,1}, numOutputs::Int; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)))
-    #
-    # Codigo a desarrollar
-    #
+    ann = Chain();
+    numInputsLayer = numInputs
+    for numOutputsLayer = topology 
+        ann = Chain(ann..., Dense(numInputsLayer, numOutputsLayer, transferFunctions) ); 
+        numInputsLayer = numOutputsLayer; 
+    end;
+    ann = Chain(ann..., Dense(numOutputs, 1, identity))
+    softmax
+    return ann
 end;
 
 function trainClassANN(topology::AbstractArray{<:Int,1}, dataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,2}}; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)), maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01)
-    #
-    # Codigo a desarrollar
-    #
+    numInputs, numOutputs = size(dataset);
+    RNA = buildClassANN(numInputs, topology, numOutputs, transferFunctions);
+    for i in maxEpochs
+        opt_state = setup(Adam(learningRate), RNA) ;
+        Train!(loss, RNA, opt_state);
+    end;
 end;
 
 function trainClassANN(topology::AbstractArray{<:Int,1}, (inputs, targets)::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)), maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01)
-    #
-    # Codigo a desarrollar
-    #
+    dataset = reshape(inputs, targets)
+    trainClassANN(topology, dataset, transferFunctions, maxEpochs, minLoss, learningRate)
 end;
-
 
 # ----------------------------------------------------------------------------------------------
 # ------------------------------------- Ejercicio 3 --------------------------------------------
