@@ -8,22 +8,19 @@ using Flux.Losses
 
 
 function oneHotEncoding(feature::AbstractArray{<:Any,1}, classes::AbstractArray{<:Any,1})
-    #
-    # Codigo a desarrollar
-    #
+    numClasses = length(classes);
+    if numClasses<=2
+        classes = reshape(classes.==classes[1], :, 1);
+    else
+        oneHot = convert(BitArray{2}, hcat([instance.==classes for instance in feature]...)');
+        classes = oneHot;
+    end;
+    return classes;
 end;
 
-function oneHotEncoding(feature::AbstractArray{<:Any,1})
-    #
-    # Codigo a desarrollar
-    #
-end;
+oneHotEncoding(feature::AbstractArray{<:Any,1}) = oneHotEncoding(feature, unique(feature))
 
-function oneHotEncoding(feature::AbstractArray{Bool,1})
-    #
-    # Codigo a desarrollar
-    #
-end;
+oneHotEncoding(feature::AbstractArray{Bool,1}) = Matrix(Int.(reshape(feature, :, 1)))
 
 function calculateMinMaxNormalizationParameters(dataset::AbstractArray{<:Real,2})
     mx = maximum(dataset, dims= 1)
@@ -83,15 +80,17 @@ end;
 
 
 function classifyOutputs(outputs::AbstractArray{<:Real,1}; threshold::Real=0.5)
-    #
-    # Codigo a desarrollar
-    #
+    outputs = reshape(outputs.>= threshold, :, 1)
+    return outputs;
 end;
 
 function classifyOutputs(outputs::AbstractArray{<:Real,2}; threshold::Real=0.5)
-    #
-    # Codigo a desarrollar
-    #
+    if size(outputs)[2] == 1
+        outputs = outputs[:]
+        return reshape(classifyOutputs(outputs[:], threshold), :, 1)
+    else
+        return outputs.==maximum(outputs, dims=2)  
+    end   
 end;
 
 function accuracy(outputs::AbstractArray{Bool,1}, targets::AbstractArray{Bool,1})
