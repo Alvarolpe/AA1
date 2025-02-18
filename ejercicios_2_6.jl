@@ -133,8 +133,13 @@ function buildClassANN(numInputs::Int, topology::AbstractArray{<:Int,1}, numOutp
         ann = Chain(ann..., Dense(numInputsLayer, numOutputsLayer, transferFunctions) ); 
         numInputsLayer = numOutputsLayer; 
     end;
-    ann = Chain(ann..., Dense(numOutputs, 1, identity))
-    softmax
+
+    if numOutputs > 2
+        ann = Chain(ann..., Dense(numInputsLayer, numOutputs, transferFunctions), softmax )
+    else
+        ann = Chain(ann..., Dense(numInputsLayer, numOutputs, identity))
+    end;
+    
     return ann
 end;
 
