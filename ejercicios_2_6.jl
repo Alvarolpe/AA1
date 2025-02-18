@@ -94,27 +94,33 @@ function classifyOutputs(outputs::AbstractArray{<:Real,2}; threshold::Real=0.5)
 end;
 
 function accuracy(outputs::AbstractArray{Bool,1}, targets::AbstractArray{Bool,1})
-    #
-    # Codigo a desarrollar
-    #
+    classComparison = targets .== outputs
+    correctClassifications = all(classComparison)
+    accuracy = mean(correctClassifications)
+    return accuracy
 end;
 
 function accuracy(outputs::AbstractArray{Bool,2}, targets::AbstractArray{Bool,2})
-    #
-    # Codigo a desarrollar
-    #
+    classComparison = targets .== outputs
+    correctClassifications = all(classComparison)
+    accuracy = mean(correctClassifications,dims = 2)
+    return accuracy
 end;
 
 function accuracy(outputs::AbstractArray{<:Real,1}, targets::AbstractArray{Bool,1}; threshold::Real=0.5)
-    #
-    # Codigo a desarrollar
-    #
+    outputs = outputs .>= threshold
+    classComparison = targets .== outputs
+    correctClassifications = all(classComparison)
+    accuracy = mean(correctClassifications)
+    return accuracy
 end;
 
 function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; threshold::Real=0.5)
-    #
-    # Codigo a desarrollar
-    #
+    outputs = outputs .>= threshold
+    classComparison = targets .== outputs
+    correctClassifications = all(classComparison)
+    accuracy = mean(correctClassifications,dims = 2)
+    return accuracy
 end;
 
 function buildClassANN(numInputs::Int, topology::AbstractArray{<:Int,1}, numOutputs::Int; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)))
