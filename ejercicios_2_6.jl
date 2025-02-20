@@ -146,13 +146,17 @@ end;
 function trainClassANN(topology::AbstractArray{<:Int,1}, dataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,2}}; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)), maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01)
     numInputs = size(dataset[1])[2]
     numOutputs = size(dataset[2])[2]
+    data = [(convert(Float32 ,dataset[1]), dataset[2])]'
+    Losses = Float32[]
     RNA = buildClassANN(numInputs, topology, numOutputs, transferFunctions);
     for i in 1:maxEpochs
         opt_state = setup(Adam(learningRate), RNA) ;
-        Train!(RNA, dataset', opt_state) do m, x, y
-            loss(m, x, y)
+        val, Train!(RNA, data, opt_state) do m, x, y
+            my_loss = loss(m, x, y)
+            result = (RNA, my_loss)
         end;
 
+        push!(Losses, Val)
         acc = accuracy(RNA, numOutputs)
 
         if  acc > minLoss
@@ -160,6 +164,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1}, dataset::Tuple{Abstract
             break
           end;
     end;
+    return RNA
 end;
 
 function trainClassANN(topology::AbstractArray{<:Int,1}, (inputs, targets)::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)), maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01)
