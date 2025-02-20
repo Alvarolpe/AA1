@@ -6,7 +6,6 @@ using Statistics
 using Flux
 using Flux.Losses
 
-
 function oneHotEncoding(feature::AbstractArray{<:Any,1}, classes::AbstractArray{<:Any,1})
     numClasses = length(classes);
     if numClasses<=2
@@ -20,7 +19,8 @@ end;
 
 oneHotEncoding(feature::AbstractArray{<:Any,1}) = oneHotEncoding(feature, unique(feature))
 
-oneHotEncoding(feature::AbstractArray{Bool,1}) = Matrix(Int.(reshape(feature, :, 1)))
+oneHotEncoding(feature::AbstractArray{Bool,1}) = reshape(feature, :, 1)
+
 
 function calculateMinMaxNormalizationParameters(dataset::AbstractArray{<:Real,2})
     mx = maximum(dataset, dims= 1)
@@ -30,105 +30,112 @@ end;
 
 function calculateZeroMeanNormalizationParameters(dataset::AbstractArray{<:Real,2})
     mn = mean(dataset, dims = 1)
-    sigma = var(dataset, dims = 1)
+    sigma = std(dataset, dims = 1)
     return (mn, sigma)
 end;
 
 
 function normalizeMinMax!(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
-    (mx, mn) = normalizationParameters
+    mx, mn = normalizationParameters
     return (dataset[:, :] .- mn) ./ (mx -mn)
 end;
 
 function normalizeMinMax!(dataset::AbstractArray{<:Real,2})
-    (mx, mn) = calculateMinMaxNormalizationParameters(dataset)
+    mx, mn = calculateMinMaxNormalizationParameters(dataset)
     normalizeMinMax!(dataset, (mx,mn))
 end;
 
 function normalizeMinMax(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
-    (mx, mn) = normalizationParameters
+    mx, mn = normalizationParameters
     data = copy(dataset)
     return (data[:,:] .- mn) ./ (mx -mn)
 end;
 
 function normalizeMinMax(dataset::AbstractArray{<:Real,2})
-    (mx, mn) = calculateMinMaxNormalizationParameters(dataset)
+    mx, mn = calculateMinMaxNormalizationParameters(dataset)
     normalizeMinMax(dataset, (mx, mn))
 end;
 
 
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
-    (mn, sigma) = normalizationParameters
+    mn, sigma = normalizationParameters
     return (dataset .- mn) ./  sigma
 end;
 
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2})
-    (mn, sigma) = calculateZeroMeanNormalizationParameters(dataset)
+    mn, sigma = calculateZeroMeanNormalizationParameters(dataset)
     normalizeZeroMean!(dataset, (mn, sigma))
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
-    (mn, sigma) = normalizationParameters
+    mn, sigma = normalizationParameters
     data = copy(dataset)
     return (data .- mn) ./  sigma
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2})
-    (mn, sigma) = calculateZeroMeanNormalizationParameters(dataset)
+    mn, sigma = calculateZeroMeanNormalizationParameters(dataset)
     normalizeZeroMean(dataset, (mn, sigma))
 end;
 
-
-function classifyOutputs(outputs::AbstractArray{<:Real,1}; threshold::Real=0.5)
-    outputs = reshape(outputs.>= threshold, :, 1)
+function classifyOutputs(outputs::AbstractArray{<:Real, 1}; threshold::Real=0.5)
+    outputs = outputs.>= threshold
     return outputs;
-end;
+end
 
-function classifyOutputs(outputs::AbstractArray{<:Real,2}; threshold::Real=0.5)
-     if size(outputs)[2] == 1
+function classifyOutputs(outputs::AbstractArray{<:Real, 2}; threshold::Real=0.5)
+    if size(outputs)[2] == 1
         outputs = outputs[:]
-        return reshape(classifyOutputs(outputs[:], threshold), :, 1)
+        return reshape(classifyOutputs(outputs[:]; threshold), :, 1)
     else
         (_,indicesMaxEachInstance) = findmax(outputs, dims=2);
         outputs = falses(size(outputs));
         outputs[indicesMaxEachInstance] .= true;
         return outputs  
     end   
-end;
+end
 
 function accuracy(outputs::AbstractArray{Bool,1}, targets::AbstractArray{Bool,1})
-    classComparison = targets .== outputs
-    correctClassifications = all(classComparison)
-    accuracy = mean(correctClassifications)
-    return accuracy
-end;
+    return mean(targets .== outputs)
+end
 
-function accuracy(outputs::AbstractArray{Bool,2}, targets::AbstractArray{Bool,2})
-    classComparison = targets .== outputs
-    correctClassifications = all(classComparison)
-    accuracy = mean(correctClassifications,dims = 2)
-    return accuracy
-end;
+function accuracy(outputs::AbstractArray{Bool, 2}, targets::AbstractArray{Bool, 2})
+    if size(targets)[2] == 1 && size(outputs)[2]==1
+        return accuracy(outputs[:, 1], targets[:,1])
+    elseif size(targets)[2] == 2 && size(outputs)[2]==2
+        return accuracy(outputs[:, 1], targets[:,1])
+    elseif size(targets)[2] > 2 && size(outputs)[2] > 2
+        classComparison = targets .== outputs
+        correctClassifications = all(classComparison, dims=2)
+        accuracy = mean(correctClassifications)
+        return accuracy
+    end
+end
 
 function accuracy(outputs::AbstractArray{<:Real,1}, targets::AbstractArray{Bool,1}; threshold::Real=0.5)
-    outputs = outputs .>= threshold
-    classComparison = targets .== outputs
-    correctClassifications = all(classComparison)
-    accuracy = mean(correctClassifications)
-    return accuracy
+    new_outputs = outputs .>= threshold
+    return accuracy(targets, new_outputs)
 end;
 
-function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; threshold::Real=0.5)
-    outputs = outputs .>= threshold
-    classComparison = targets .== outputs
-    correctClassifications = all(classComparison)
-    accuracy = mean(correctClassifications,dims = 2)
-    return accuracy
+function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2};threshold::Real=0.5)
+    if size(targets, 2) == 1 && size(outputs, 2) == 1
+        outputs = outputs[:, 1]
+        targets = targets[:, 1]
+        return accuracy(outputs, targets; threshold)
+    elseif size(targets, 2) == 2 && size(outputs, 2) == 2
+        outputs = outputs[:, 1]
+        targets = targets[:, 1]
+        return accuracy(outputs, targets; threshold)
+    elseif size(targets, 2) > 2 && size(outputs, 2) > 2
+        outputs = classifyOutputs(outputs)
+        return accuracy(outputs, targets) 
+    end  
 end;
 
 function buildClassANN(numInputs::Int, topology::AbstractArray{<:Int,1}, numOutputs::Int; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)))
     ann = Chain();
     numInputsLayer = numInputs
+    
     for numOutputsLayer = topology 
         ann = Chain(ann..., Dense(numInputsLayer, numOutputsLayer, transferFunctions) ); 
         numInputsLayer = numOutputsLayer; 
@@ -144,33 +151,38 @@ function buildClassANN(numInputs::Int, topology::AbstractArray{<:Int,1}, numOutp
 end;
 
 function trainClassANN(topology::AbstractArray{<:Int,1}, dataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,2}}; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)), maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01)
-    numInputs = size(dataset[1])[2]
-    numOutputs = size(dataset[2])[2]
-    data = [(convert(Float32 ,dataset[1]), dataset[2])]'
-    Losses = Float32[]
-    RNA = buildClassANN(numInputs, topology, numOutputs, transferFunctions);
+
+    entradas, salidas = dataset
+    entradas = convert(Array{Float32,2},entradas);
+    entradas_t = transpose(entradas)
+    salidas_t = transpose(salidas)
+    ann = buildClassANN(size(entradas_t)[1], topology, size(salidas_t)[2]; transferFunctions)
+    loss(ann, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(ann(x),y) : Losses.crossentropy(ann(x),y);
+    
+    loss_total = Float32[]
+
+    optimizador = Flux.setup(Adam(learningRate), ann)
+
+    append!(loss_total, loss(ann,entradas_t,salidas_t))
+
     for i in 1:maxEpochs
-        opt_state = setup(Adam(learningRate), RNA) ;
-        val, Train!(RNA, data, opt_state) do m, x, y
-            my_loss = loss(m, x, y)
-            result = (RNA, my_loss)
-        end;
-
-        push!(Losses, Val)
-        acc = accuracy(RNA, numOutputs)
-
-        if  acc > minLoss
-            println("stopping after $i epochs")
+        Flux.train!(loss, ann, [(entradas_t, salidas_t)], optimizador);
+        loss_actual = loss(ann,entradas_t,salidas_t)
+        append!(loss_total, loss_actual)
+        if loss_actual <= minLoss
             break
-          end;
-    end;
-    return RNA
+        end
+        return(ann,loss_total)
+    end
 end;
 
-function trainClassANN(topology::AbstractArray{<:Int,1}, (inputs, targets)::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)), maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01)
-    dataset = reshape(inputs, targets)
-    trainClassANN(topology, dataset, transferFunctions, maxEpochs, minLoss, learningRate)
+function trainClassANN(topology::AbstractArray{<:Int,1}, dataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)), maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01)
+    entradas, salidas = dataset
+    salidas = reshape(salidas, :, 1);
+    dataset = (entradas,salidas);
+    trainClassANN(topology,dataset;transferFunctions)
 end;
+
 
 # ----------------------------------------------------------------------------------------------
 # ------------------------------------- Ejercicio 3 --------------------------------------------
