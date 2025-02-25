@@ -216,15 +216,8 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     testDataset::      Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,2}}=(Array{eltype(trainingDataset[1]),2}(undef,0,size(trainingDataset[1],2)), falses(0,size(trainingDataset[2],2))),
     transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)),
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20)
-    inputs_val, outputs_val = validationDataset
-    inputs_test, outputs_test = testDataset
-    convert(Array{<:Float32,2}, inputs_val); convert(Array{<:Float32,2}, inputs_test);
 
-    inputs_val, outputs_val = validationDataset
-    inputs_test, outputs_test = testDataset
-    convert(Array{<:Float32,2}, inputs_val); convert(Array{<:Float32,2}, inputs_test);
-
-    entradas, salidas = dataset
+    entradas, salidas = trainingDataset
     entradas = convert(Array{Float32,2},entradas);
     entradas_t = transpose(entradas)
     salidas_t = transpose(salidas)
@@ -233,32 +226,32 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     
     loss_total = Float32[]
     epochs = 0
+    maxLoss = Inf
+    Val =  !(all(validationDataset -> validationDataset == 0))
 
     optimizador = Flux.setup(Adam(learningRate), ann)
-
     append!(loss_total, loss(ann,entradas_t,salidas_t))
 
     for i in 1:maxEpochs
         Flux.train!(loss, ann, [(entradas_t, salidas_t)], optimizador);
-        loss_actual = loss(ann,entradas_t,salidas_t)
-        append!(loss_total, loss_actual)
         
-        epochs += 1
-        if maxLoss > loss_total[i][2]
-            epochs = 0
-            maxLoss = Losses[i]
-        end;
+        if Val
+            loss_actual = loss(ann, inputs_val, outputs_val)
+            append!(loss_total, loss_actual)
 
-        if epochs == maxEpochsVal
-            break
-        end;
+            epochs += 1
+            if maxLoss > loss_actual
+                epochs = 0
+                maxLoss = (loss_actual, ann)
+            end;
 
-        if loss_actual <= minLoss
-            break
+            if loss_actual <= minLoss || epochs == maxEpochsVal 
+                break
+            end;
         end;
         
     end;
-    return (ann,loss_total)
+    return maxLoss
 end;
 
 function trainClassANN(topology::AbstractArray{<:Int,1},
