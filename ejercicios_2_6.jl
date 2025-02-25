@@ -191,14 +191,23 @@ end;
 using Random
 
 function holdOut(N::Int, P::Real)
-    v = rand(1:N,P*N)
-    return v
+    test = randperm(N)
+    test = test[1:Int(round(N*P))]
+    training = filter(x -> x ∉ test, 1:N)
+    return (training,test)
 end;
 
+
 function holdOut(N::Int, Pval::Real, Ptest::Real)
-    v1 = rand(1:N,Pval*N)
-    v2 = rand(1:N,Ptest*N)
-    return (v1,v2)
+    values = holdOut(N,Ptest)
+    training = values[1]
+    test = values[2]
+    Pval =   Pval / (1-Ptest)
+    values = holdOut(length(training),Pval)
+    aux = training
+    training = training[values[1]]
+    validation = aux[values[2]]
+    return (training,validation,test)
 end;
 
 function trainClassANN(topology::AbstractArray{<:Int,1},
