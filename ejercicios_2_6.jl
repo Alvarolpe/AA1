@@ -216,9 +216,36 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     testDataset::      Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,2}}=(Array{eltype(trainingDataset[1]),2}(undef,0,size(trainingDataset[1],2)), falses(0,size(trainingDataset[2],2))),
     transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)),
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20)
-    #
-    # Codigo a desarrollar
-    #
+    inputs_val, outputs_val = validationDataset
+    inputs_test, outputs_test = testDataset
+    convert(Array{<:Float32,2}, inputs_val); convert(Array{<:Float32,2}, inputs_test);
+
+    numInputs, numOutputs = size(trainingDataset)
+    data = [(convert(Float32 ,dataset[1]), dataset[2])]'
+    Losses = Float32[]
+    maxLoss = Inf
+    RNA = buildClassANN(numInputs, topology, numOutputs, transferFunctions);
+    epochs = 0
+    for i in 1:maxEpochs
+        opt_state = setup(Adam(learningRate), RNA) ;
+        val, Train!(RNA, data, opt_state) do m, x, y
+            my_loss = loss(m, x, y)
+            result = (RNA, my_loss)
+        end;
+
+        push!(Losses, Val)
+        epochs += 1
+        if maxLoss > Losses[i][2]
+            epochs = 0
+            maxLoss = Losses[i]
+            if epochs == maxEpochsVal
+                break
+            end;
+        end;
+
+    end;
+    return RNA
+
 end;
 
 function trainClassANN(topology::AbstractArray{<:Int,1},
