@@ -220,32 +220,45 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     inputs_test, outputs_test = testDataset
     convert(Array{<:Float32,2}, inputs_val); convert(Array{<:Float32,2}, inputs_test);
 
-    numInputs, numOutputs = size(trainingDataset)
-    data = [(convert(Float32 ,dataset[1]), dataset[2])]'
-    Losses = Float32[]
-    maxLoss = Inf
-    RNA = buildClassANN(numInputs, topology, numOutputs, transferFunctions);
-    epochs = 0
-    for i in 1:maxEpochs
-        opt_state = setup(Adam(learningRate), RNA) ;
-        val, Train!(RNA, data, opt_state) do m, x, y
-            my_loss = loss(m, x, y)
-            result = (RNA, my_loss)
-        end;
+    inputs_val, outputs_val = validationDataset
+    inputs_test, outputs_test = testDataset
+    convert(Array{<:Float32,2}, inputs_val); convert(Array{<:Float32,2}, inputs_test);
 
-        push!(Losses, Val)
+    entradas, salidas = dataset
+    entradas = convert(Array{Float32,2},entradas);
+    entradas_t = transpose(entradas)
+    salidas_t = transpose(salidas)
+    ann = buildClassANN(size(entradas_t)[1], topology, size(salidas_t)[2]; transferFunctions)
+    loss(ann, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(ann(x),y) : Losses.crossentropy(ann(x),y);
+    
+    loss_total = Float32[]
+    epochs = 0
+
+    optimizador = Flux.setup(Adam(learningRate), ann)
+
+    append!(loss_total, loss(ann,entradas_t,salidas_t))
+
+    for i in 1:maxEpochs
+        Flux.train!(loss, ann, [(entradas_t, salidas_t)], optimizador);
+        loss_actual = loss(ann,entradas_t,salidas_t)
+        append!(loss_total, loss_actual)
+        
         epochs += 1
-        if maxLoss > Losses[i][2]
+        if maxLoss > loss_total[i][2]
             epochs = 0
             maxLoss = Losses[i]
-            if epochs == maxEpochsVal
-                break
-            end;
         end;
 
-    end;
-    return RNA
+        if epochs == maxEpochsVal
+            break
+        end;
 
+        if loss_actual <= minLoss
+            break
+        end;
+        
+    end;
+    return (ann,loss_total)
 end;
 
 function trainClassANN(topology::AbstractArray{<:Int,1},
