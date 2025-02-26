@@ -298,9 +298,20 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     testDataset::      Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}=(Array{eltype(trainingDataset[1]),2}(undef,0,size(trainingDataset[1],2)), falses(0)),
     transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)),
     maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, maxEpochsVal::Int=20)
-    #
-    # Codigo a desarrollar
-    #
+    
+    entradas_train, salidas_train = trainingDatraset
+    entradas_val, salidas_val = validationDataset
+    entradas_test, salidas_test = testDataset
+
+    salidas_train = reshape(salidas_train, :, 1);
+    salidas_val = reshape(salidas_val, :, 1);
+    salidas_test = reshape(salidas_test, :, 1);
+
+    trainingDataset = (entradas_train, salidas_train);
+    validationDataset = (entradas_val, salidas_val);
+    testDataset = (entradas_test, salidas_test);
+    
+    trainClassANN(topology, trainingDataset; validationDataset, testDataset, transferFunctions, maxEpochs, minLoss, learningRate, maxEpochsVal)
 end;
 
 
