@@ -143,7 +143,7 @@ function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,
         return accuracy(outputs, targets; threshold = threshold)
     else
         outputs = classifyOutputs(outputs)
-        return accuracy(outputs, targets,threshold) 
+        return accuracy(outputs, targets; threshold = threshold) 
     end  
 end;
 
