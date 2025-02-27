@@ -53,13 +53,13 @@ end;
 
 function normalizeMinMax!(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateMinMaxNormalizationParameters(dataset)
-    return normalizeMinMax!(dataset, normalizationParameters)
+    normalizeMinMax!(dataset, normalizationParameters)
 end;
 
 
 function normalizeMinMax(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     data = copy(dataset)
-    return normalizeMinMax!(data, normalizationParameters)
+    normalizeMinMax!(data, normalizationParameters)
 end;
 
 
@@ -68,7 +68,7 @@ function normalizeMinMax(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateMinMaxNormalizationParameters(dataset)
     data = copy(dataset)
     print(typeof(normalizationParameters))
-    return normalizeMinMax!(data, normalizationParameters)
+    normalizeMinMax!(data, normalizationParameters)
 end;
 
 
@@ -82,17 +82,17 @@ end;
 
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateZeroMeanNormalizationParameters(dataset)
-    return normalizeZeroMean!(dataset, normalizationParameters)
+    normalizeZeroMean!(dataset, normalizationParameters)
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     data = copy(dataset)
-    return normalizeZeroMean!(dataset,normalizationParameters)
+    normalizeZeroMean!(dataset,normalizationParameters)
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateZeroMeanNormalizationParameters(dataset)
-    return normalizeZeroMean(dataset, normalizationParameters)
+    normalizeZeroMean(dataset, normalizationParameters)
 end;
 
 function classifyOutputs(outputs::AbstractArray{<:Real, 1}; threshold::Real=0.5)
@@ -139,7 +139,7 @@ function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,
     if size(targets)[2] <= 2 && size(outputs)[2] <= 2
         outputs = outputs[:, 1]
         targets = targets[:, 1]
-        return accuracy(outputs, targets)
+        return accuracy(outputs, targets; threshold = threshold)
     else
         outputs = classifyOutputs(outputs)
         return accuracy(outputs, targets) 
