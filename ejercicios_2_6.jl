@@ -62,13 +62,12 @@ end;
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     mu, sigma = normalizationParameters
     dataset .= (sigma == 0) ? zeros(size(dataset)) : (dataset .- mn) ./  sigma
-    dataset = convert(dataset,AbstractMatrix{<:Real})
     return dataset
 end;
 
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2})
     mu, sigma = calculateZeroMeanNormalizationParameters(dataset)
-    return normalizeZeroMean!(dataset, (mu, sigma))
+    normalizeZeroMean!(dataset, (mu, sigma))
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
@@ -260,10 +259,16 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     loss_inic_train =  loss(ann,entradas_train_t,salidas_train_t)
     push!(losses_train, loss_inic_train)
 
+    #Definimos las varibles necesarias para el citerio de parada
+    best_val_loss = Inf32
+    lim_epoch_cicles = 0
+    ann_final = deepcopy(ann)
+
     #print(loss_inic_train)
     if !isempty(entradas_val)
         loss_inic_val = loss(ann,entradas_val_t,salidas_val_t)
         push!(losses_val, loss_inic_val)
+        best_val_loss = loss_inic_val
     end
     
     if !isempty(entradas_test)
@@ -271,16 +276,11 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         push!(losses_test, loss_inic_test)
     end
 
-    #Definimos las varibles necesarias para el citerio de parada
-    best_val_loss = Inf32
-    lim_epoch_cicles = 0
-    ann_final = deepcopy(ann)
-
-
     #Iniciamos los ciclos de entrenamiento
 
     for i in 1:maxEpochs
-
+        #print(i)
+        #print(" ")
         Flux.train!(loss, ann, [(entradas_train_t, salidas_train_t)], optimizador);
         loss_train =  loss(ann,entradas_train_t,salidas_train_t)
         push!(losses_train, loss_train)
@@ -299,17 +299,21 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
                 lim_epoch_cicles = 0; #Reinicio de los ciclos
                 ann_final = deepcopy(ann);
             else
+                #print(loss_val)
                 lim_epoch_cicles += 1;
                 if lim_epoch_cicles == maxEpochsVal
+                    print(loss(ann_final,entradas_train_t,salidas_train_t))
                     return (ann_final, losses_train, losses_val, losses_test)
                 end 
             end;
-        end
-
-        if loss_train <= minLoss
-            break
+        else
+            if loss_train <= minLoss
+                break
+            end
         end
     end
+    #print("el los final es")
+    #print(loss(ann,entradas_train_t,salidas_train_t))
     return (ann, losses_train, losses_val, losses_test)
 end
 
@@ -329,5 +333,4 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     validationDataset=(entradas_val, reshape(salidas_val, length(salidas_val), 1)),
     testDataset=(entradas_test, reshape(salidas_test, length(salidas_test), 1)),
     transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate, maxEpochsVal=maxEpochsVal);
-
-end;
+end 
