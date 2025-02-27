@@ -91,7 +91,7 @@ end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateZeroMeanNormalizationParameters(dataset)
-    return normalizeZeroMean(dataset, normalizationParameters)
+    normalizeZeroMean(dataset, normalizationParameters)
 end;
 
 function classifyOutputs(outputs::AbstractArray{<:Real, 1}; threshold::Real=0.5)
@@ -110,8 +110,6 @@ function classifyOutputs(outputs::AbstractArray{<:Real, 2}; threshold::Real=0.5)
         return outputs  
     end   
 end
-
-
 
 
 
@@ -225,6 +223,7 @@ function holdOut(N::Int, Pval::Real, Ptest::Real)
     validation = aux[values[2]]
     return (training,validation,test)
 end;
+
 
 function trainClassANN(topology::AbstractArray{<:Int,1},
     trainingDataset::  Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,2}};
