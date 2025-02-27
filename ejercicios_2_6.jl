@@ -3,8 +3,6 @@
 #26624100J
 #34291851R
 
-
-
 # ----------------------------------------------------------------------------------------------
 # ------------------------------------- Ejercicio 2 --------------------------------------------
 # ----------------------------------------------------------------------------------------------
@@ -46,29 +44,28 @@ function normalizeMinMax!(dataset::AbstractArray{<:Real,2}, normalizationParamet
     mn, mx = normalizationParameters
     dataset .-= mn
     dataset ./= (mx.-mn)
-    dataset = dataset[:,vec(mn .== mx)] .= 0;
+    dataset[:,vec(mn .== mx)] .= 0;
     return dataset
 end;
 
 
 function normalizeMinMax!(dataset::AbstractArray{<:Real,2})
-    normalizationParameters = calculateMinMaxNormalizationParameters(dataset);
-    return normalizeMinMax!(dataset, normalizationParameters)
+    normalizationParameters = calculateMinMaxNormalizationParameters(dataset)
+    normalizeMinMax!(dataset, normalizationParameters)
 end;
 
 
 function normalizeMinMax(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     data = copy(dataset)
-    return normalizeMinMax!(data, normalizationParameters)
+    normalizeMinMax!(data, normalizationParameters)
 end;
 
 
 
 function normalizeMinMax(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateMinMaxNormalizationParameters(dataset)
-    data_copy = copy(dataset)
-    print(typeof(normalizationParameters))
-    return normalizeMinMax!(data_copy, normalizationParameters)
+    data = copy(dataset)
+    normalizeMinMax!(data, normalizationParameters)
 end;
 
 
@@ -76,25 +73,25 @@ function normalizeZeroMean!(dataset::AbstractArray{<:Real,2}, normalizationParam
     mu, sigma = normalizationParameters
     dataset .-= mu
     dataset ./= sigma
-    dataset = dataset[:,vec(sigma .== 0)] .= 0;
+    dataset[:,vec(sigma .== 0)] .= 0;
     return dataset
 end;
 
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateZeroMeanNormalizationParameters(dataset)
-    return normalizeZeroMean!(dataset, normalizationParameters)
+    normalizeZeroMean!(dataset, normalizationParameters)
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
-    data_copy = copy(dataset)
-    return normalizeZeroMean!(data_copy,normalizationParameters)
+    data = copy(dataset)
+    normalizeZeroMean!(data,normalizationParameters)
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateZeroMeanNormalizationParameters(dataset)
-    return normalizeZeroMean(dataset, normalizationParameters)
+    data = copy(dataset)
+    normalizeZeroMean!(data, normalizationParameters)
 end;
-
 
 function classifyOutputs(outputs::AbstractArray{<:Real, 1}; threshold::Real=0.5)
     outputs = outputs.>= threshold
