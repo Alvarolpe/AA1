@@ -62,12 +62,13 @@ end;
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     mu, sigma = normalizationParameters
     dataset .= (sigma == 0) ? zeros(size(dataset)) : (dataset .- mn) ./  sigma
+    dataset = convert(dataset,AbstractMatrix{<:Real})
     return dataset
 end;
 
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2})
     mu, sigma = calculateZeroMeanNormalizationParameters(dataset)
-    normalizeZeroMean!(dataset, (mu, sigma))
+    return normalizeZeroMean!(dataset, (mu, sigma))
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
