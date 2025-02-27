@@ -342,8 +342,8 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     entradas_test, salidas_test = testDataset
     entradas_train, salidas_train = trainingDataset
 
-    return trainClassANN(topology, (entradas_train, reshape(salidas_train, length(salidas_train), 1));
+    trainClassANN(topology, (entradas_train, reshape(salidas_train, length(salidas_train), 1));
     validationDataset=(entradas_val, reshape(salidas_val, length(salidas_val), 1)),
     testDataset=(entradas_test, reshape(salidas_test, length(salidas_test), 1)),
     transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate, maxEpochsVal=maxEpochsVal);
-end 
+end
