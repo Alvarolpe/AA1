@@ -135,8 +135,8 @@ function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,
 end;
 
 function buildClassANN(numInputs::Int, topology::AbstractArray{<:Int,1}, numOutputs::Int; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)))
-    ann = Chain()  # Inicializa la red neuronal
-    # Agrega las capas intermedias
+    ann = Chain()
+
     for index in eachindex(topology)
         if index == 1
             ann = Chain(ann..., Dense(numInputs, topology[index], transferFunctions[index]))
@@ -144,7 +144,7 @@ function buildClassANN(numInputs::Int, topology::AbstractArray{<:Int,1}, numOutp
             ann = Chain(ann..., Dense(topology[index - 1], topology[index], transferFunctions[index]))
         end
     end
-    # Agrega la capa de salida
+
     if numOutputs > 2
         ann = Chain(ann..., Dense(topology[end], numOutputs), softmax)
     else
