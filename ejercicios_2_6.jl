@@ -45,21 +45,21 @@ end;
 function normalizeMinMax!(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     mn, mx = normalizationParameters
     dataset .-= mn
-    dataset ./= (mx.-mn) + eps()
-    dataset = dataset[:,vec(mn == mx)] .= 0;
+    dataset ./= (mx.-mn)
+    dataset = dataset[:,vec(mn .== mx)] .= 0;
     return dataset
 end;
 
 
 function normalizeMinMax!(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateMinMaxNormalizationParameters(dataset)
-    normalizeMinMax!(dataset, normalizationParameters)
+    return normalizeMinMax!(dataset, normalizationParameters)
 end;
 
 
 function normalizeMinMax(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     data = copy(dataset)
-    normalizeMinMax!(data, normalizationParameters)
+    return normalizeMinMax!(data, normalizationParameters)
 end;
 
 
@@ -67,31 +67,32 @@ end;
 function normalizeMinMax(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateMinMaxNormalizationParameters(dataset)
     data = copy(dataset)
-    normalizeMinMax!(data, normalizationParameters)
+    print(typeof(normalizationParameters))
+    return normalizeMinMax!(data, normalizationParameters)
 end;
 
 
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     mu, sigma = normalizationParameters
     dataset .-= mu
-    dataset ./= sigma + eps()
-    dataset = dataset[:,vec(sigma == 0)] .= 0;
+    dataset ./= sigma
+    dataset = dataset[:,vec(sigma .== 0)] .= 0;
     return dataset
 end;
 
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateZeroMeanNormalizationParameters(dataset)
-    normalizeZeroMean!(dataset, normalizationParameters)
+    return normalizeZeroMean!(dataset, normalizationParameters)
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2}, normalizationParameters::NTuple{2, AbstractArray{<:Real,2}})
     data = copy(dataset)
-    normalizeZeroMean!(dataset,normalizationParameters)
+    return normalizeZeroMean!(dataset,normalizationParameters)
 end;
 
 function normalizeZeroMean(dataset::AbstractArray{<:Real,2})
     normalizationParameters = calculateZeroMeanNormalizationParameters(dataset)
-    normalizeZeroMean(dataset, normalizationParameters)
+    return normalizeZeroMean(dataset, normalizationParameters)
 end;
 
 function classifyOutputs(outputs::AbstractArray{<:Real, 1}; threshold::Real=0.5)
@@ -138,24 +139,24 @@ function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,
     if size(targets)[2] <= 2 && size(outputs)[2] <= 2
         outputs = outputs[:, 1]
         targets = targets[:, 1]
-        return accuracy(outputs, targets; threshold = threshold)
+        return accuracy(outputs, targets)
     else
         outputs = classifyOutputs(outputs)
-        return accuracy(outputs, targets; threshold = threshold) 
+        return accuracy(outputs, targets) 
     end  
 end;
 
+
+
 function buildClassANN(numInputs::Int, topology::AbstractArray{<:Int,1}, numOutputs::Int; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)))
-    ann = Chain()  # Inicializa la red neuronal
-    # Agrega las capas intermedias
-    for index in eachindex(topology)
-        if index == 1
-            ann = Chain(ann..., Dense(numInputs, topology[index], transferFunctions[index]))
-        else
-            ann = Chain(ann..., Dense(topology[index - 1], topology[index], transferFunctions[index]))
-        end
-    end
-    # Agrega la capa de salida
+    ann = Chain();
+    numInputsLayer = numInputs
+    i = 1
+    for numOutputsLayer = topology 
+        ann = Chain(ann..., Dense(numInputsLayer, numOutputsLayer, transferFunctions[i])); 
+        numInputsLayer = numOutputsLayer; 
+        i += 1
+    end;
     if numOutputs > 2
         ann = Chain(ann..., Dense(topology[end], numOutputs), softmax)
     else
