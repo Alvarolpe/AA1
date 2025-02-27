@@ -4,7 +4,6 @@
 #34291851R
 
 
-
 # ----------------------------------------------------------------------------------------------
 # ------------------------------------- Ejercicio 2 --------------------------------------------
 # ----------------------------------------------------------------------------------------------
@@ -105,11 +104,6 @@ function classifyOutputs(outputs::AbstractArray{<:Real, 2}; threshold::Real=0.5)
     end   
 end
 
-
-
-
-
-
 function accuracy(outputs::AbstractArray{Bool,1}, targets::AbstractArray{Bool,1})
     return mean(targets .== outputs)
 end;
@@ -142,8 +136,8 @@ function accuracy(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,
 end;
 
 function buildClassANN(numInputs::Int, topology::AbstractArray{<:Int,1}, numOutputs::Int; transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)))
-    ann = Chain()  # Inicializa la red neuronal
-    # Agrega las capas intermedias
+    ann = Chain()
+
     for index in eachindex(topology)
         if index == 1
             ann = Chain(ann..., Dense(numInputs, topology[index], transferFunctions[index]))
@@ -151,7 +145,7 @@ function buildClassANN(numInputs::Int, topology::AbstractArray{<:Int,1}, numOutp
             ann = Chain(ann..., Dense(topology[index - 1], topology[index], transferFunctions[index]))
         end
     end
-    # Agrega la capa de salida
+
     if numOutputs > 2
         ann = Chain(ann..., Dense(topology[end], numOutputs), softmax)
     else
@@ -167,7 +161,7 @@ function trainClassANN(topology::AbstractArray{<:Int,1}, dataset::Tuple{Abstract
     entradas = convert(Array{Float32,2},entradas);
     entradas_t = transpose(entradas)
     salidas_t = transpose(salidas)
-    ann = buildClassANN(size(entradas_t)[1], topology, size(salidas_t)[2]; transferFunctions=transferFunctions)
+    ann = buildClassANN(size(entradas_t)[1], topology, size(salidas_t)[1]; transferFunctions=transferFunctions)
     loss(ann, x,y) = (size(y,1) == 1) ? Losses.binarycrossentropy(ann(x),y) : Losses.crossentropy(ann(x),y);
     
     loss_total = Float32[]
@@ -266,10 +260,16 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     loss_inic_train =  loss(ann,entradas_train_t,salidas_train_t)
     push!(losses_train, loss_inic_train)
 
+    #Definimos las varibles necesarias para el citerio de parada
+    best_val_loss = Inf32
+    lim_epoch_cicles = 0
+    ann_final = deepcopy(ann)
+
     #print(loss_inic_train)
     if !isempty(entradas_val)
         loss_inic_val = loss(ann,entradas_val_t,salidas_val_t)
         push!(losses_val, loss_inic_val)
+        best_val_loss = loss_inic_val
     end
     
     if !isempty(entradas_test)
@@ -277,16 +277,11 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
         push!(losses_test, loss_inic_test)
     end
 
-    #Definimos las varibles necesarias para el citerio de parada
-    best_val_loss = Inf32
-    lim_epoch_cicles = 0
-    ann_final = deepcopy(ann)
-
-
     #Iniciamos los ciclos de entrenamiento
 
     for i in 1:maxEpochs
-
+        #print(i)
+        #print(" ")
         Flux.train!(loss, ann, [(entradas_train_t, salidas_train_t)], optimizador);
         loss_train =  loss(ann,entradas_train_t,salidas_train_t)
         push!(losses_train, loss_train)
@@ -305,17 +300,21 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
                 lim_epoch_cicles = 0; #Reinicio de los ciclos
                 ann_final = deepcopy(ann);
             else
+                #print(loss_val)
                 lim_epoch_cicles += 1;
                 if lim_epoch_cicles == maxEpochsVal
+                    print(loss(ann_final,entradas_train_t,salidas_train_t))
                     return (ann_final, losses_train, losses_val, losses_test)
                 end 
             end;
-        end
-
-        if loss_train <= minLoss
-            break
+        else
+            if loss_train <= minLoss
+                break
+            end
         end
     end
+    #print("el los final es")
+    #print(loss(ann,entradas_train_t,salidas_train_t))
     return (ann, losses_train, losses_val, losses_test)
 end
 
