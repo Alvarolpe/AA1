@@ -368,6 +368,16 @@ function confusionMatrix(outputs::AbstractArray{<:Real,1}, targets::AbstractArra
     #
 end;
 
+function printConfusionMatrix(outputs::AbstractArray{Bool,1}, targets::AbstractArray{Bool,1})
+    matrix_conf = confusionMatrix(outputs, targets)
+    println(matrix_conf)
+end;
+
+function printConfusionMatrix(outputs::AbstractArray{<:Real,1}, targets::AbstractArray{Bool,1}; threshold::Real=0.5)
+    matrix_conf = confusionMatrix(outputs, targets)
+    println(matrix_conf)
+end; 
+
 function confusionMatrix(outputs::AbstractArray{Bool,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
     #
     # Codigo a desarrollar
