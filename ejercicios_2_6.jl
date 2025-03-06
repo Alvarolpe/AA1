@@ -1,8 +1,3 @@
-#Autores:
-#49472200M
-#26624100J
-#34291851R
-
 # ----------------------------------------------------------------------------------------------
 # ------------------------------------- Ejercicio 2 --------------------------------------------
 # ----------------------------------------------------------------------------------------------
@@ -44,8 +39,8 @@ function normalizeMinMax!(dataset::AbstractArray{<:Real,2}, normalizationParamet
     mn, mx = normalizationParameters
     dataset .-= mn
     dataset ./= (mx.-mn)
-    dataset[:,vec(mn .== mx)] .= 0;
-    return dataset
+    dataset = dataset[:,vec(mn .== mx)] .= 0
+    return dataset;
 end;
 
 
@@ -73,8 +68,8 @@ function normalizeZeroMean!(dataset::AbstractArray{<:Real,2}, normalizationParam
     mu, sigma = normalizationParameters
     dataset .-= mu
     dataset ./= sigma
-    dataset[:,vec(sigma .== 0)] .= 0;
-    return dataset
+    dataset = dataset[:,vec(sigma .== 0)] .= 0
+    return dataset;
 end;
 
 function normalizeZeroMean!(dataset::AbstractArray{<:Real,2})
@@ -345,3 +340,141 @@ function trainClassANN(topology::AbstractArray{<:Int,1},
     testDataset=(entradas_test, reshape(salidas_test, length(salidas_test), 1)),
     transferFunctions=transferFunctions, maxEpochs=maxEpochs, minLoss=minLoss, learningRate=learningRate, maxEpochsVal=maxEpochsVal);
 end
+# Ejercicio 4
+
+function confusionMatrix(outputs::AbstractArray{Bool,1}, targets::AbstractArray{Bool,1})
+    VN = sum(outputs .== 0 .&& targets .== 0)
+    FP = sum(outputs .== 0 .&& targets .== 1)
+    VP = sum(outputs .== 1 .&& targets .== 1)
+    FN = sum(outputs .== 1 .&& targets .== 0)
+
+    precision = (VN + VP)/(VN + VP + FN + FP)
+    failure = (FN + FP)/(VN + VP + FN + FP)
+    recall = VP/(FN+VP)
+    especificity = VN/(FP+VN)
+    positivity = VP/(VP+FP)
+    negativity = VN/(VN+FN)
+    F1_score = 2 * (positivity * recall) / (positivity + recall)
+    confusion_matrix = reshape([VN, FN, FP, VP], 2, 2)
+    output = [precision,failure,recall,especificity ,positivity, negativity, F1_score]
+    output = map(x -> isnan(x) ? 0.0 : x, output)
+    precision,failure,recall,especificity ,positivity, negativity, F1_score = Tuple(output)
+    return (precision,failure,recall,especificity ,positivity, negativity, F1_score,confusion_matrix)
+end;
+
+function confusionMatrix(outputs::AbstractArray{<:Real,1}, targets::AbstractArray{Bool,1}; threshold::Real=0.5)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+function confusionMatrix(outputs::AbstractArray{Bool,2}, targets::AbstractArray{Bool,2}; weighted::Bool=true)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+function confusionMatrix(outputs::AbstractArray{<:Real,2}, targets::AbstractArray{Bool,2}; threshold::Real=0.5, weighted::Bool=true)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+function confusionMatrix(outputs::AbstractArray{<:Any,1}, targets::AbstractArray{<:Any,1}, classes::AbstractArray{<:Any,1}; weighted::Bool=true)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+function confusionMatrix(outputs::AbstractArray{<:Any,1}, targets::AbstractArray{<:Any,1}; weighted::Bool=true)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+using SymDoME
+
+
+function trainClassDoME(trainingDataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,1}}, testInputs::AbstractArray{<:Real,2}, maximumNodes::Int)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+function trainClassDoME(trainingDataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{Bool,2}}, testInputs::AbstractArray{<:Real,2}, maximumNodes::Int)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+
+function trainClassDoME(trainingDataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{<:Any,1}}, testInputs::AbstractArray{<:Real,2}, maximumNodes::Int)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+
+
+
+# ----------------------------------------------------------------------------------------------
+# ------------------------------------- Ejercicio 5 --------------------------------------------
+# ----------------------------------------------------------------------------------------------
+
+using Random
+using Random:seed!
+
+function crossvalidation(N::Int64, k::Int64)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+function crossvalidation(targets::AbstractArray{Bool,1}, k::Int64)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+function crossvalidation(targets::AbstractArray{Bool,2}, k::Int64)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+function crossvalidation(targets::AbstractArray{<:Any,1}, k::Int64)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+function ANNCrossValidation(topology::AbstractArray{<:Int,1},
+    dataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{<:Any,1}},
+    crossValidationIndices::Array{Int64,1};
+    numExecutions::Int=50,
+    transferFunctions::AbstractArray{<:Function,1}=fill(σ, length(topology)),
+    maxEpochs::Int=1000, minLoss::Real=0.0, learningRate::Real=0.01, validationRatio::Real=0, maxEpochsVal::Int=20)
+    #
+    # Codigo a desarrollar
+    #
+end;
+
+
+# ----------------------------------------------------------------------------------------------
+# ------------------------------------- Ejercicio 6 --------------------------------------------
+# ----------------------------------------------------------------------------------------------
+
+using MLJ
+using LIBSVM, MLJLIBSVMInterface
+using NearestNeighborModels, MLJDecisionTreeInterface
+
+SVMClassifier = MLJ.@load SVC pkg=LIBSVM verbosity=0
+kNNClassifier = MLJ.@load KNNClassifier pkg=NearestNeighborModels verbosity=0
+DTClassifier  = MLJ.@load DecisionTreeClassifier pkg=DecisionTree verbosity=0
+
+
+function modelCrossValidation(modelType::Symbol, modelHyperparameters::Dict, dataset::Tuple{AbstractArray{<:Real,2}, AbstractArray{<:Any,1}}, crossValidationIndices::Array{Int64,1})
+    #
+    # Codigo a desarrollar
+    #
+end;
